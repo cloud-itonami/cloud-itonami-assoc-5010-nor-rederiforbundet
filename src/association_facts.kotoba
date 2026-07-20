@@ -1,0 +1,72 @@
+(ns association-facts
+  (:export [main association-covered? entry-count entry-field topic-count
+            topic by-topic-count by-topic-id coverage-note]))
+
+(defn association-covered? [association :string] :i64
+  (string=? association "rederiforbundet"))
+(defn entry-count [association :string] :i64
+  (if (association-covered? association) 2 0))
+(defn valid-entry? [association :string index :i64] :i64
+  (if (association-covered? association)
+    (if (= index 0) 1 (if (= index 1) 1 0)) 0))
+
+(defn entry-field [association :string index :i64 field :string]
+  [:option :string]
+  (if (valid-entry? association index)
+    (if (= index 0)
+      (cond
+        (string=? field "id") (option-some-of [:option :string] "rederiforbundet.founding-1909")
+        (string=? field "title") (option-some-of [:option :string] "Norges Rederiforbund founding (Vår historie)")
+        (string=? field "association") (option-some-of [:option :string] "rederiforbundet")
+        (string=? field "isic") (option-some-of [:option :string] "5010")
+        (string=? field "country") (option-some-of [:option :string] "NOR")
+        (string=? field "kind") (option-some-of [:option :string] "governance-program")
+        (string=? field "url") (option-some-of [:option :string] "https://www.rederi.no/om-oss/historie/")
+        (string=? field "url-provenance") (option-some-of [:option :string] "official-rederi-no")
+        (string=? field "established-date") (option-some-of [:option :string] "1909-09-15")
+        (string=? field "retrieved-at") (option-some-of [:option :string] "2026-07-16")
+        :else (option-none-of [:option :string]))
+      (cond
+        (string=? field "id") (option-some-of [:option :string] "rederiforbundet.thor-heyerdahl-award-1999")
+        (string=? field "title") (option-some-of [:option :string] "Thor Heyerdahl International Maritime Award (About us)")
+        (string=? field "association") (option-some-of [:option :string] "rederiforbundet")
+        (string=? field "isic") (option-some-of [:option :string] "5010")
+        (string=? field "country") (option-some-of [:option :string] "NOR")
+        (string=? field "kind") (option-some-of [:option :string] "governance-program")
+        (string=? field "url") (option-some-of [:option :string] "https://www.rederi.no/en/about-us/")
+        (string=? field "url-provenance") (option-some-of [:option :string] "official-rederi-no")
+        (string=? field "established-date") (option-some-of [:option :string] "1999")
+        (string=? field "retrieved-at") (option-some-of [:option :string] "2026-07-16")
+        :else (option-none-of [:option :string])))
+    (option-none-of [:option :string])))
+
+(defn topic-count [association :string index :i64] :i64
+  (if (valid-entry? association index) 1 0))
+(defn topic [association :string index :i64 topic-index :i64]
+  [:option :string]
+  (if (valid-entry? association index)
+    (if (= topic-index 0)
+      (if (= index 0) (option-some-of [:option :string] "governance")
+          (option-some-of [:option :string] "environment"))
+      (option-none-of [:option :string]))
+    (option-none-of [:option :string])))
+
+(defn by-topic-count [association :string candidate :string] :i64
+  (if (association-covered? association)
+    (if (string=? candidate "governance") 1
+        (if (string=? candidate "environment") 1 0)) 0))
+(defn by-topic-id [association :string candidate :string index :i64]
+  [:option :string]
+  (if (association-covered? association)
+    (if (= index 0)
+      (if (string=? candidate "governance") (entry-field association 0 "id")
+          (if (string=? candidate "environment") (entry-field association 1 "id")
+              (option-none-of [:option :string])))
+      (option-none-of [:option :string]))
+    (option-none-of [:option :string])))
+(defn coverage-note [association :string] [:option :string]
+  (if (association-covered? association)
+    (option-some-of [:option :string]
+      "cloud-itonami-assoc-5010-nor-rederiforbundet Wave 0 (ADR-2607141700): 2 rederiforbundet entries seeded with official rederi.no citations. Extend the sovereign catalog; never fabricate a rule id/url.")
+    (option-none-of [:option :string])))
+(defn main [] :i64 0)
